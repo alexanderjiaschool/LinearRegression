@@ -1,4 +1,5 @@
 from Optimizer import Optimizer
+import numpy as np
 
 
 class LinearRegression:
@@ -11,17 +12,19 @@ class LinearRegression:
         optimizer: Optimizer,
     ):
         if self._isValidShape(features, y):
-            self.features = features
-            self.y = y
+            self.features = np.array(features, dtype=float)
+            self.y = np.array(y, dtype=float)
         else:
             raise ValueError("Incorrect data shape")
+
+        # weight is a numpy array.
         self._param = {"w": [], "b": 0}
         self._optimizer = optimizer
         self._initializeParam()
         LinearRegression.total_model_count += 1
 
     def _initializeParam(self):
-        self._param["w"] = [0.0] * len(self.features[0])
+        self._param["w"] = np.zeros(len(self.features[0]))
         self._param["b"] = 0
 
     def fit(self, epochs: int):
@@ -29,18 +32,13 @@ class LinearRegression:
             self._optimizer.step(self._param, self._gradients())
             print(f"Epoch {epoch + 1}/{epochs}, Loss: {self._loss():.4f}")
 
-    def predict(self, feature):
-        result = (
-            LinearRegression.dot_product(feature, self._param["w"]) + self._param["b"]
-        )
+    def predict(self, features):
+        result = np.asarray(features) @ self._param["w"] + self._param["b"]
         return result
 
     def _loss(self):
-        n = len(self.features)
-        loss = 0
-        for i in range(n):
-            loss += (self.predict(self.features[i]) - self.y[i]) ** 2
-        return loss / n
+        error = self.predict(self.features) - self.y
+        return np.mean(error**2)
 
     @staticmethod
     def dot_product(a, b):
@@ -50,34 +48,13 @@ class LinearRegression:
         return result
 
     def _gradients(self):
-        weightLen = len(self._param["w"])
-        grad = [0.0] * weightLen
-        grad_b = 0
-        # Gradients of w
-        batch_size = len(self.features)
-        for i in range(batch_size):
-            for j in range(len(self._param["w"])):  # for each weight
-                # partial derivative
-                grad[j] += (
-                    2
-                    * (
-                        LinearRegression.dot_product(self._param["w"], self.features[i])
-                        + self._param["b"]
-                        - self.y[i]
-                    )
-                    * self.features[i][j]
-                ) / batch_size
-        for i in range(batch_size):
-            # partial derivative
-            grad_b += (
-                2
-                * (
-                    LinearRegression.dot_product(self._param["w"], self.features[i])
-                    + self._param["b"]
-                    - self.y[i]
-                )
-            ) / batch_size
-        return {"dw": grad, "db": grad_b}
+        n = len(self.features)
+        error = self.predict(self.features) - self.y
+        # times the transpose of features (error length == features length)
+        dw = 2 * (self.features.T @ error) / n
+        db = 2 * error.sum() / n
+
+        return {"dw": dw, "db": db}
 
     def _isValidShape(self, features, y):
         if len(features) != len(y) or len(features) == 0:
@@ -109,6 +86,7 @@ class LassoRegression(LinearRegression):
         else:
             return 0
 
+    """
     def _gradients(self):
         weightLen = len(self._param["w"])
         grad = [0.0] * weightLen
@@ -141,6 +119,17 @@ class LassoRegression(LinearRegression):
 
         return {"dw": grad, "db": grad_b}
 
+    """
+
+    def _gradients(self):
+        n = len(self.features)
+        error = self.predict(self.features) - self.y
+        # times the transpose of features (error length == features length)
+        dw = 2 * (self.features.T @ error) / n + self._a * np.sign(self._param["w"])
+        db = 2 * error.sum() / n
+
+        return {"dw": dw, "db": db}
+
 
 # L2 regularization
 class RidgeRegression(LinearRegression):
@@ -155,33 +144,10 @@ class RidgeRegression(LinearRegression):
         self._a = alpha
 
     def _gradients(self):
-        weightLen = len(self._param["w"])
-        grad = [0.0] * weightLen
-        grad_b = 0
-        # Gradients of w
-        batch_size = len(self.features)
-        for i in range(batch_size):
-            for j in range(len(self._param["w"])):  # for each weight
-                # partial derivative
-                grad[j] += (
-                    2
-                    * (
-                        LinearRegression.dot_product(self._param["w"], self.features[i])
-                        + self._param["b"]
-                        - self.y[i]
-                    )
-                    * self.features[i][j]
-                    + self._a * self._param["w"][j]
-                ) / batch_size
-        for i in range(batch_size):
-            # partial derivative
-            grad_b += (
-                2
-                * (
-                    LinearRegression.dot_product(self._param["w"], self.features[i])
-                    + self._param["b"]
-                    - self.y[i]
-                )
-            ) / batch_size
+        n = len(self.features)
+        error = self.predict(self.features) - self.y
+        # times the transpose of features (error length == features length)
+        dw = 2 * (self.features.T @ error) / n + self._a * self._param["w"]
+        db = 2 * error.sum() / n
 
-        return {"dw": grad, "db": grad_b}
+        return {"dw": dw, "db": db}

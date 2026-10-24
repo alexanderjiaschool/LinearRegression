@@ -8,10 +8,5 @@ if __name__ == "__main__":
     optimizer = Adam(learning_rate=0.01, n=2)
     model = LinearRegression(features, y, optimizer)
     model.fit(epochs=1000)
-    """
-    optimizer_momentum = Momentum(learning_rate=0.01, n=2, beta=0.9)
-    model_momentum = LinearRegression(features, y, optimizer_momentum)
-    model_momentum.fit(epochs=1000)
-     """
     # prediction test
     print(model.predict([4.0, 5.0]))
