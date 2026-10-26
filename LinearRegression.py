@@ -2,6 +2,7 @@ from Optimizer import Optimizer
 import numpy as np
 
 
+# Getter Setter for protected attribite
 class LinearRegression:
     total_model_count = 0
 
@@ -17,11 +18,14 @@ class LinearRegression:
         else:
             raise ValueError("Incorrect data shape")
 
-        # weight is a numpy array.
-        self._param = {"w": [], "b": 0}
-        self._optimizer = optimizer
-        self._initializeParam()
+        self._param = {"w": np.zeros(len(self.features[0])), "b": 0.0}
+        self.updateOptimizer(optimizer)
         LinearRegression._increaseModelCount()
+
+    def updateOptimizer(self, optimizer: Optimizer):
+        if not isinstance(optimizer, Optimizer):
+            raise TypeError("Invalid Optimizer")
+        self._optimizer = optimizer
 
     @classmethod
     def _increaseModelCount(cls):
@@ -38,10 +42,6 @@ class LinearRegression:
             y=[5.0, 7.0, 9.0],
             optimizer=Optimizer(learning_rate=0.01, n=2),
         )
-
-    def _initializeParam(self):
-        self._param["w"] = np.zeros(len(self.features[0]))
-        self._param["b"] = 0
 
     def fit(self, epochs: int):
         for epoch in range(epochs):

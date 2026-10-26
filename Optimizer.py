@@ -26,73 +26,36 @@ class Adam(Optimizer):
         super().__init__(learning_rate, n)
         self.beta1 = beta1
         self.beta2 = beta2
-        self._m_w = np.zeros(n)
-        self._v_w = np.zeros(n)
 
-        self._m_b = 0
-        self._v_b = 0
+        self._m = {"w": np.zeros(n), "b": 0.0}
+        self._v = {"w": np.zeros(n), "b": 0.0}
 
-    @property
-    def m_w_corrected(self):
-        # return self._m_w / (1 - self.beta1**self._step_count)
-        return Adam.correction(self._m_w, self.beta1, self._step_count)
-
-    @property
-    def v_w_corrected(self):
-        # return self._v_w / (1 - self.beta2**self._step_count)
-        return Adam.correction(self._v_w, self.beta2, self._step_count)
-
-    @property
-    def m_b_corrected(self):
-        # return self._m_b / (1 - self.beta1**self._step_count)
-        return Adam.correction(self._m_b, self.beta1, self._step_count)
-
-    @property
-    def v_b_corrected(self):
-        # return self._v_b / (1 - self.beta2**self._step_count)
-        return Adam.correction(self._v_b, self.beta2, self._step_count)
+        # an extremely small number used to prevent division by zero error
+        self.eps = 1e-8
 
     @staticmethod
     def correction(x, beta, exp):
         return x / (1 - beta**exp)
 
-    """
-    def step(self, param: dict, gradients: dict):
-        self._step_count += 1
-        for i in range(self._n):
-            self._m_w[i] = (
-                self.beta1 * self._m_w[i] + (1 - self.beta1) * gradients["dw"][i]
-            )
-            self._v_w[i] = self.beta2 * self._v_w[i] + (1 - self.beta2) * (
-                gradients["dw"][i] ** 2
-            )
-            param["w"][i] -= (
-                self._learning_rate
-                * self.m_w_corrected[i]
-                / (self.v_w_corrected[i] ** 0.5 + 1e-8)
-            )
-        self._m_b = self.beta1 * self._m_b + (1 - self.beta1) * gradients["db"]
-        self._v_b = self.beta2 * self._v_b + (1 - self.beta2) * (gradients["db"] ** 2)
-        param["b"] -= (
-            self._learning_rate * self.m_b_corrected / (self.v_b_corrected**0.5 + 1e-8)
-        )
-    """
-
     def step(self, param: dict, gradients: dict):
         self.checkShape(param, gradients)
         self._step_count += 1
-        self._m_w = self.beta1 * self._m_w + (1 - self.beta1) * gradients["dw"]
-        self._v_w = self.beta2 * self._v_w + (1 - self.beta2) * (gradients["dw"] ** 2)
+        param["w"] -= self._compute_update("w", gradients["dw"])
+        param["b"] -= self._compute_update("b", gradients["db"])
 
-        param["w"] -= (
-            self._learning_rate * self.m_w_corrected / (self.v_w_corrected**0.5 + 1e-8)
+    def _compute_update(self, param_name: str, gradients):
+        self._m[param_name] = (
+            self.beta1 * self._m[param_name] + (1 - self.beta1) * gradients
+        )
+        self._v[param_name] = self.beta2 * self._v[param_name] + (1 - self.beta2) * (
+            gradients**2
         )
 
-        self._m_b = self.beta1 * self._m_b + (1 - self.beta1) * gradients["db"]
-        self._v_b = self.beta2 * self._v_b + (1 - self.beta2) * (gradients["db"] ** 2)
-        param["b"] -= (
-            self._learning_rate * self.m_b_corrected / (self.v_b_corrected**0.5 + 1e-8)
-        )
+        steps = self._step_count
+        m_hat = Adam.correction(self._m[param_name], self.beta1, steps)
+        v_hat = Adam.correction(self._v[param_name], self.beta2, steps)
+
+        return self._learning_rate * m_hat / (np.sqrt(v_hat) + self.eps)
 
 
 class Momentum(Optimizer):

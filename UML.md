@@ -1,3 +1,4 @@
+```mermaid
 classDiagram
     class LinearRegression {
         +total_model_count : int$
@@ -66,4 +67,5 @@ classDiagram
     LinearRegression <|-- RidgeRegression
     Optimizer <|-- Adam
     Optimizer <|-- Momentum
-    LinearRegression ..> Optimizer : uses
+    LinearRegression *.. Optimizer
+```
