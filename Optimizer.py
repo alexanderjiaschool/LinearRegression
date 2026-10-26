@@ -34,19 +34,27 @@ class Adam(Optimizer):
 
     @property
     def m_w_corrected(self):
-        return self._m_w / (1 - self.beta1**self._step_count)
+        # return self._m_w / (1 - self.beta1**self._step_count)
+        return Adam.correction(self._m_w, self.beta1, self._step_count)
 
     @property
     def v_w_corrected(self):
-        return self._v_w / (1 - self.beta2**self._step_count)
+        # return self._v_w / (1 - self.beta2**self._step_count)
+        return Adam.correction(self._v_w, self.beta2, self._step_count)
 
     @property
     def m_b_corrected(self):
-        return self._m_b / (1 - self.beta1**self._step_count)
+        # return self._m_b / (1 - self.beta1**self._step_count)
+        return Adam.correction(self._m_b, self.beta1, self._step_count)
 
     @property
     def v_b_corrected(self):
-        return self._v_b / (1 - self.beta2**self._step_count)
+        # return self._v_b / (1 - self.beta2**self._step_count)
+        return Adam.correction(self._v_b, self.beta2, self._step_count)
+
+    @staticmethod
+    def correction(x, beta, exp):
+        return x / (1 - beta**exp)
 
     """
     def step(self, param: dict, gradients: dict):

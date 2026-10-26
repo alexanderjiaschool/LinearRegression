@@ -21,7 +21,23 @@ class LinearRegression:
         self._param = {"w": [], "b": 0}
         self._optimizer = optimizer
         self._initializeParam()
-        LinearRegression.total_model_count += 1
+        LinearRegression._increaseModelCount()
+
+    @classmethod
+    def _increaseModelCount(cls):
+        cls.total_model_count += 1
+
+    @classmethod
+    def getModelCount(cls):
+        return cls.total_model_count
+
+    @classmethod
+    def standardTemplate(cls):
+        return cls(
+            features=[[1.0, 2.0], [2.0, 3.0], [3.0, 4.0]],
+            y=[5.0, 7.0, 9.0],
+            optimizer=Optimizer(learning_rate=0.01, n=2),
+        )
 
     def _initializeParam(self):
         self._param["w"] = np.zeros(len(self.features[0]))
@@ -37,15 +53,11 @@ class LinearRegression:
         return result
 
     def _loss(self):
-        error = self.predict(self.features) - self.y
-        return np.mean(error**2)
+        return LinearRegression.mean_squared_error(self.predict(self.features), self.y)
 
     @staticmethod
-    def dot_product(a, b):
-        result = 0
-        for i in range(len(a)):
-            result += a[i] * b[i]
-        return result
+    def mean_squared_error(y, y_hat):
+        return np.mean((y_hat - y) ** 2)
 
     def _gradients(self):
         n = len(self.features)
@@ -72,19 +84,10 @@ class LassoRegression(LinearRegression):
         features: list[list[float]],
         y: list[float],
         optimizer: Optimizer,
-        alpha=0,
+        alpha=0.0,
     ):
         super().__init__(features, y, optimizer)
         self._a = alpha
-
-    @staticmethod
-    def sign(x):
-        if x > 0:
-            return 1
-        elif x < 0:
-            return -1
-        else:
-            return 0
 
     """
     def _gradients(self):
@@ -138,7 +141,7 @@ class RidgeRegression(LinearRegression):
         features: list[list[float]],
         y: list[float],
         optimizer: Optimizer,
-        alpha=0,
+        alpha=0.0,
     ):
         super().__init__(features, y, optimizer)
         self._a = alpha
