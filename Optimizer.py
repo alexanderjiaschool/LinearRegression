@@ -73,8 +73,8 @@ class Adam(Optimizer):
         return True
 
     @staticmethod
-    def correction(x, beta, exp):
-        return x / (1 - beta**exp)
+    def correction(x, decay, exponent):
+        return x / (1 - decay**exponent)
 
     def step(self, param: dict, gradients: dict):
         self.checkShape(param, gradients)
@@ -114,11 +114,13 @@ class Adam(Optimizer):
 
 
 class Momentum(Optimizer):
-    def __init__(self, learning_rate: float, n: int, decay_for_velocity: float = 0.9):
-        super().__init__(learning_rate, n)
+    def __init__(
+        self, learning_rate: float, dimension: int, decay_for_velocity: float = 0.9
+    ):
+        super().__init__(learning_rate, dimension)
         if Momentum.isValidMomentumParam(decay_for_velocity):
             self._decay_for_velocity = decay_for_velocity
-        self._velocity = {"weight": np.zeros(n), "bias": 0.0}
+        self._velocity = {"weight": np.zeros(dimension), "bias": 0.0}
 
     @staticmethod
     def isValidMomentumParam(decay_for_velocity):

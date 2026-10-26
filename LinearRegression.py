@@ -89,7 +89,14 @@ class LassoRegression(LinearRegression):
         penalty_factor=0.0,
     ):
         super().__init__(features, expectedOutputs, optimizer)
-        self._penalty_factor = penalty_factor
+        if LassoRegression.isValidPenaltyFactor(penalty_factor):
+            self._penalty_factor = penalty_factor
+
+    @staticmethod
+    def isValidPenaltyFactor(penalty_factor):
+        if penalty_factor < 0.0:
+            raise ValueError("Invalid penalty factor")
+        return True
 
     def _gradients(self):
         batch_size = len(self.features)
@@ -113,7 +120,14 @@ class RidgeRegression(LinearRegression):
         penalty_factor=0.0,
     ):
         super().__init__(features, expectedOutputs, optimizer)
-        self._penalty_factor = penalty_factor
+        if RidgeRegression.isValidPenaltyFactor(penalty_factor):
+            self._penalty_factor = penalty_factor
+
+    @staticmethod
+    def isValidPenaltyFactor(penalty_factor):
+        if penalty_factor < 0.0:
+            raise ValueError("Invalid penalty factor")
+        return True
 
     def _gradients(self):
         batch_size = len(self.features)

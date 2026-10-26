@@ -24,7 +24,7 @@ if __name__ == "__main__":
     standard_optimizer_model = LinearRegression(features, y, optimizer)
     standard_optimizer_model.fit(epochs=100)
 
-    momentum = Momentum(learning_rate=0.01, n=2, decay_for_velocity=0.9)
+    momentum = Momentum(learning_rate=0.01, dimension=2, decay_for_velocity=0.9)
     optimizer_momentum_model = LinearRegression(features, y, momentum)
     optimizer_momentum_model.fit(epochs=100)
 
