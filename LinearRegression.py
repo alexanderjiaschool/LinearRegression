@@ -9,16 +9,16 @@ class LinearRegression:
     def __init__(
         self,
         features: list[list[float]],
-        y: list[float],
+        expectedOutputs: list[float],
         optimizer: Optimizer,
     ):
-        if self._isValidShape(features, y):
+        if self._isValidShape(features, expectedOutputs):
             self.features = np.array(features, dtype=float)
-            self.y = np.array(y, dtype=float)
+            self.expectedOutputs = np.array(expectedOutputs, dtype=float)
         else:
             raise ValueError("Incorrect data shape")
 
-        self._param = {"w": np.zeros(len(self.features[0])), "b": 0.0}
+        self._param = {"weight": np.zeros(len(self.features[0])), "bias": 0.0}
         self.updateOptimizer(optimizer)
         LinearRegression._increaseModelCount()
 
@@ -39,8 +39,8 @@ class LinearRegression:
     def standardTemplate(cls):
         return cls(
             features=[[1.0, 2.0], [2.0, 3.0], [3.0, 4.0]],
-            y=[5.0, 7.0, 9.0],
-            optimizer=Optimizer(learning_rate=0.01, n=2),
+            expectedOutputs=[5.0, 7.0, 9.0],
+            optimizer=Optimizer(learning_rate=0.01, dimension=2),
         )
 
     def fit(self, epochs: int):
@@ -49,30 +49,32 @@ class LinearRegression:
             print(f"Epoch {epoch + 1}/{epochs}, Loss: {self._loss():.4f}")
 
     def predict(self, features):
-        result = np.asarray(features) @ self._param["w"] + self._param["b"]
+        result = np.asarray(features) @ self._param["weight"] + self._param["bias"]
         return result
 
     def _loss(self):
-        return LinearRegression.mean_squared_error(self.predict(self.features), self.y)
+        return LinearRegression.mean_squared_error(
+            self.predict(self.features), self.expectedOutputs
+        )
 
     @staticmethod
-    def mean_squared_error(y, y_hat):
-        return np.mean((y_hat - y) ** 2)
+    def mean_squared_error(expectedOutput, predictedOutput):
+        return np.mean((expectedOutput - predictedOutput) ** 2)
 
     def _gradients(self):
-        n = len(self.features)
-        error = self.predict(self.features) - self.y
+        batch_size = len(self.features)
+        error = self.predict(self.features) - self.expectedOutputs
         # times the transpose of features (error length == features length)
-        dw = 2 * (self.features.T @ error) / n
-        db = 2 * error.sum() / n
+        gradient_weight = 2 * (self.features.T @ error) / batch_size
+        gradient_bias = 2 * error.sum() / batch_size
 
-        return {"dw": dw, "db": db}
+        return {"weight": gradient_weight, "bias": gradient_bias}
 
-    def _isValidShape(self, features, y):
-        if len(features) != len(y) or len(features) == 0:
+    def _isValidShape(self, inputMatrix, outputMatrix):
+        if len(inputMatrix) != len(outputMatrix) or len(inputMatrix) == 0:
             return False
-        for i in range(len(features)):
-            if len(features[i]) != len(features[0]):
+        for i in range(len(inputMatrix)):
+            if len(inputMatrix[i]) != len(inputMatrix[0]):
                 return False
         return True
 
@@ -82,56 +84,23 @@ class LassoRegression(LinearRegression):
     def __init__(
         self,
         features: list[list[float]],
-        y: list[float],
+        expectedOutputs: list[float],
         optimizer: Optimizer,
-        alpha=0.0,
+        penalty_factor=0.0,
     ):
-        super().__init__(features, y, optimizer)
-        self._a = alpha
+        super().__init__(features, expectedOutputs, optimizer)
+        self._penalty_factor = penalty_factor
 
-    """
     def _gradients(self):
-        weightLen = len(self._param["w"])
-        grad = [0.0] * weightLen
-        grad_b = 0
-        # Gradients of w
         batch_size = len(self.features)
-        for i in range(batch_size):
-            for j in range(len(self._param["w"])):  # for each weight
-                # partial derivative
-                grad[j] += (
-                    2
-                    * (
-                        LinearRegression.dot_product(self._param["w"], self.features[i])
-                        + self._param["b"]
-                        - self.y[i]
-                    )
-                    * self.features[i][j]
-                    + self._a * LassoRegression.sign(self._param["w"][j])
-                ) / batch_size
-        for i in range(batch_size):
-            # partial derivative
-            grad_b += (
-                2
-                * (
-                    LinearRegression.dot_product(self._param["w"], self.features[i])
-                    + self._param["b"]
-                    - self.y[i]
-                )
-            ) / batch_size
-
-        return {"dw": grad, "db": grad_b}
-
-    """
-
-    def _gradients(self):
-        n = len(self.features)
-        error = self.predict(self.features) - self.y
+        error = self.predict(self.features) - self.expectedOutputs
         # times the transpose of features (error length == features length)
-        dw = 2 * (self.features.T @ error) / n + self._a * np.sign(self._param["w"])
-        db = 2 * error.sum() / n
+        gradient_weight = 2 * (
+            self.features.T @ error
+        ) / batch_size + self._penalty_factor * np.sign(self._param["weight"])
+        gradient_bias = 2 * error.sum() / batch_size
 
-        return {"dw": dw, "db": db}
+        return {"weight": gradient_weight, "bias": gradient_bias}
 
 
 # L2 regularization
@@ -139,18 +108,21 @@ class RidgeRegression(LinearRegression):
     def __init__(
         self,
         features: list[list[float]],
-        y: list[float],
+        expectedOutputs: list[float],
         optimizer: Optimizer,
-        alpha=0.0,
+        penalty_factor=0.0,
     ):
-        super().__init__(features, y, optimizer)
-        self._a = alpha
+        super().__init__(features, expectedOutputs, optimizer)
+        self._penalty_factor = penalty_factor
 
     def _gradients(self):
-        n = len(self.features)
-        error = self.predict(self.features) - self.y
+        batch_size = len(self.features)
+        error = self.predict(self.features) - self.expectedOutputs
         # times the transpose of features (error length == features length)
-        dw = 2 * (self.features.T @ error) / n + self._a * self._param["w"]
-        db = 2 * error.sum() / n
+        gradient_weight = (
+            2 * (self.features.T @ error) / batch_size
+            + self._penalty_factor * self._param["weight"]
+        )
+        gradient_bias = 2 * error.sum() / batch_size
 
-        return {"dw": dw, "db": db}
+        return {"weight": gradient_weight, "bias": gradient_bias}
