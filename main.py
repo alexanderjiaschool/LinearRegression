@@ -1,36 +1,42 @@
 from LinearRegression import LassoRegression, LinearRegression, RidgeRegression
 from Optimizer import Adam, Optimizer, Momentum
+from sklearn.datasets import load_diabetes
+from sklearn.model_selection import train_test_split
 
 if __name__ == "__main__":
-    # Example usage of LinearRegression with Adam optimizer
-    features = [[1.0, 2.0], [2.0, 3.0], [3.0, 4.0]]
-    y = [5.0, 7.0, 9.0]
-    adam = Adam(learning_rate=0.01, dimension=2)
-    model = LinearRegression(features, y, adam)
-    model.fit(epochs=100)
-    # prediction test
-    print(model.predict([4.0, 5.0]))
+    features, expectedOutput = load_diabetes(return_X_y=True, scaled=False)
+    features_train, features_test, outputs_train, outputs_test = train_test_split(
+        features, expectedOutput, test_size=0.2, random_state=0
+    )
+    mean, std = features_train.mean(axis=0), features_train.std(axis=0)
+    features_train = (features_train - mean) / std
+    features_test = (features_test - mean) / std
 
-    standard_model = LinearRegression.standardTemplate()
+    model = LinearRegression(
+        features_train,
+        outputs_train,
+        Momentum(
+            learning_rate=0.01, dimension=len(features_train[0]), decay_for_velocity=0.9
+        ),
+    )
+    model.fit(epochs=1000)
 
-    lasso_model = LassoRegression(features, y, adam, penalty_factor=0.1)
-    lasso_model.fit(epochs=100)
+    model.updateOptimizer(Adam(learning_rate=0.01, dimension=len(features_train[0])))
+    model.fit(epochs=1000)
 
-    ridge_model = RidgeRegression(features, y, adam, penalty_factor=0.1)
-    ridge_model.fit(epochs=100)
+    ridge_model = RidgeRegression(
+        features_train,
+        outputs_train,
+        Optimizer(learning_rate=0.01, dimension=len(features_train[0])),
+    )
+    ridge_model.fit(epochs=1000)
 
-    # model with standard optimizer
-    optimizer = Optimizer(learning_rate=0.01, dimension=2)
-    standard_optimizer_model = LinearRegression(features, y, optimizer)
-    standard_optimizer_model.fit(epochs=100)
+    lasso_model = LassoRegression(
+        features_train,
+        outputs_train,
+        Optimizer(learning_rate=0.01, dimension=len(features_train[0])),
+    )
+    lasso_model.fit(epochs=1000)
 
-    momentum = Momentum(learning_rate=0.01, dimension=2, decay_for_velocity=0.9)
-    optimizer_momentum_model = LinearRegression(features, y, momentum)
-    optimizer_momentum_model.fit(epochs=100)
-
-    # prediction test
-    print(lasso_model.predict([4.0, 5.0]))
-    print(ridge_model.predict([4.0, 5.0]))
-    print(standard_optimizer_model.predict([4.0, 5.0]))
-    print(optimizer_momentum_model.predict([4.0, 5.0]))
-    print(standard_model.predict([4.0, 5.0]))
+    result = model.predict(features_test)
+    print("Predicted result:" + result)
