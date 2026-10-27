@@ -21,7 +21,7 @@ if __name__ == "__main__":
             learning_rate=0.01, dimension=len(features_train[0]), decay_for_velocity=0.9
         ),
     )
-    model.fit(epochs=1000)
+    model.fit(epochs=100)
     plt.plot(model.loss_history)
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     plt.show()
 
     model.updateOptimizer(Adam(learning_rate=0.01, dimension=len(features_train[0])))
-    model.fit(epochs=1000)
+    model.fit(epochs=200)
 
     ridge_model = RidgeRegression(
         features_train,
@@ -46,4 +46,4 @@ if __name__ == "__main__":
     lasso_model.fit(epochs=1000)
 
     result = model.predict(features_test)
-    print("Predicted result:" + result)
+    print("Predicted result:" + str(result))
