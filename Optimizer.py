@@ -88,7 +88,7 @@ class Adam(Optimizer):
             * self._weighted_average_gradient[param_name]
             + (1 - self.decay_for_weighted_average_gradient) * gradients
         )
-        self._weighted_average_gradient[param_name] = (
+        self._weighted_average_squared_gradient[param_name] = (
             self.decay_for_weighted_average_squared_gradient
             * self._weighted_average_squared_gradient[param_name]
             + (1 - self.decay_for_weighted_average_squared_gradient) * (gradients**2)
@@ -132,7 +132,7 @@ class Momentum(Optimizer):
         self.checkShape(param, gradients)
         self._step_count += 1
         self._velocity["weight"] = (
-            self._velocity["weight"] * self._decay_for_velocity + gradients["bias"]
+            self._velocity["weight"] * self._decay_for_velocity + gradients["weight"]
         )
 
         self._velocity["bias"] = (

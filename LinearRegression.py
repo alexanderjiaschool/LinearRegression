@@ -17,15 +17,54 @@ class LinearRegression:
             self.expectedOutputs = np.array(expectedOutputs, dtype=float)
         else:
             raise ValueError("Incorrect data shape")
-
-        self._param = {"weight": np.zeros(len(self.features[0])), "bias": 0.0}
+        self._initializeParam(self.dimension)
         self.updateOptimizer(optimizer)
         LinearRegression._increaseModelCount()
+
+    @property
+    def dimension(self):
+        return len(self.features[0])
+
+    def _initializeParam(self, dimension):
+        self._param = {"weight": np.zeros(dimension), "bias": 0.0}
 
     def updateOptimizer(self, optimizer: Optimizer):
         if not isinstance(optimizer, Optimizer):
             raise TypeError("Invalid Optimizer")
+        if optimizer._dimension != self.dimension:
+            raise ValueError("Optimizer dimension doesn't match")
         self._optimizer = optimizer
+
+    def removeOptimizer(self):
+        if self._optimizer is None:
+            raise Exception("Optimizer is already removed")
+        self._optimizer = None
+
+    def getOptimizer(self):
+        return self._optimizer
+
+    def getParam(self):
+        return self._param
+
+    def setParam(self, param):
+        if len(param["weight"]) != self.dimension or (
+            not isinstance(param["bias"], float)
+        ):
+            raise ValueError("Invalid parameters")
+        else:
+            self._param = param
+
+    def getSamples(self):
+        return self.features, self.expectedOutputs
+
+    def setSamples(self, features, expectedOutputs):
+        if self._isValidShape(features, expectedOutputs):
+            self.features = np.array(features, dtype=float)
+            self.expectedOutputs = np.array(expectedOutputs, dtype=float)
+            if self._optimizer:
+                self._optimizer._dimension = self.dimension
+        else:
+            raise ValueError("Invalid samples")
 
     @classmethod
     def _increaseModelCount(cls):
@@ -44,9 +83,12 @@ class LinearRegression:
         )
 
     def fit(self, epochs: int):
-        for epoch in range(epochs):
-            self._optimizer.step(self._param, self._gradients())
-            print(f"Epoch {epoch + 1}/{epochs}, Loss: {self._loss():.4f}")
+        if self._optimizer:
+            for epoch in range(epochs):
+                self._optimizer.step(self._param, self._gradients())
+                print(f"Epoch {epoch + 1}/{epochs}, Loss: {self._loss():.4f}")
+        else:
+            raise ValueError("Optimizer doesn't exist, cannot fit")
 
     def predict(self, features):
         result = np.asarray(features) @ self._param["weight"] + self._param["bias"]
