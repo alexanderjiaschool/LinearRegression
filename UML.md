@@ -6,9 +6,10 @@ classDiagram
         +expectedOutputs : ndarray
         -_param : dict
         -_optimizer : Optimizer
+        +dimension : int
+        +loss_history : list
         +__init__(features, expectedOutputs, optimizer)
         -_increaseModelCount()$
-        +dimension : int
         -_initializeParam(dimension)
         +updateOptimizer(optimizer)
         +removeOptimizer()

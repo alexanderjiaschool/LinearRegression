@@ -19,6 +19,7 @@ class LinearRegression:
             raise ValueError("Incorrect data shape")
         self._initializeParam(self.dimension)
         self.updateOptimizer(optimizer)
+        self.loss_history = []
         LinearRegression._increaseModelCount()
 
     @property
@@ -86,6 +87,7 @@ class LinearRegression:
         if self._optimizer:
             for epoch in range(epochs):
                 self._optimizer.step(self._param, self._gradients())
+                self.loss_history.append(self._loss())
                 print(f"Epoch {epoch + 1}/{epochs}, Loss: {self._loss():.4f}")
         else:
             raise ValueError("Optimizer doesn't exist, cannot fit")

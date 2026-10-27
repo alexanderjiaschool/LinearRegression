@@ -3,6 +3,8 @@ from Optimizer import Adam, Optimizer, Momentum
 from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 
+import matplotlib.pyplot as plt
+
 if __name__ == "__main__":
     features, expectedOutput = load_diabetes(return_X_y=True, scaled=False)
     features_train, features_test, outputs_train, outputs_test = train_test_split(
@@ -20,6 +22,11 @@ if __name__ == "__main__":
         ),
     )
     model.fit(epochs=1000)
+    plt.plot(model.loss_history)
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Training Loss")
+    plt.show()
 
     model.updateOptimizer(Adam(learning_rate=0.01, dimension=len(features_train[0])))
     model.fit(epochs=1000)
