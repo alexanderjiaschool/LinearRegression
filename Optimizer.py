@@ -27,6 +27,14 @@ class Optimizer:
         param["weight"] -= self._learning_rate * gradients["weight"]
         param["bias"] -= self._learning_rate * gradients["bias"]
 
+    def updateHyperParam(self, learning_rate: float, dimension: int):
+        if Optimizer.isValidHyperParam(learning_rate, dimension):
+            self._learning_rate = learning_rate
+            self._dimension = dimension
+
+    def __str__(self):
+        return f"{self.__class__.__name__}:\nlearning_rate={self._learning_rate}\ndimension={self._dimension}"
+
 
 class Adam(Optimizer):
     def __init__(
@@ -57,6 +65,31 @@ class Adam(Optimizer):
 
         # an extremely small number used to prevent division by zero error
         self.padding = 1e-8
+
+    def __str__(self):
+        return (
+            super().__str__()
+            + f"\ndecay_for_weighted_average_gradient={self.decay_for_weighted_average_gradient}\ndecay_for_weighted_average_squared_gradient={self.decay_for_weighted_average_squared_gradient}"
+        )
+
+    def updateHyperParam(
+        self,
+        learning_rate: float,
+        dimension: int,
+        decay_for_weighted_moving_average_gradient: float = 0.9,
+        decay_for_weighted_moving_average_squared_gradient: float = 0.99,
+    ):
+        if Adam.isValidAdamParam(
+            decay_for_weighted_moving_average_gradient,
+            decay_for_weighted_moving_average_squared_gradient,
+        ):
+            super().updateHyperParam(learning_rate, dimension)
+            self.decay_for_weighted_average_gradient = (
+                decay_for_weighted_moving_average_gradient
+            )
+            self.decay_for_weighted_average_squared_gradient = (
+                decay_for_weighted_moving_average_squared_gradient
+            )
 
     @staticmethod
     def isValidAdamParam(
@@ -127,6 +160,16 @@ class Momentum(Optimizer):
         if decay_for_velocity > 1 or decay_for_velocity <= 0:
             raise ValueError("Invalid velocity decay factor")
         return True
+
+    def __str__(self):
+        return super().__str__() + f"\ndecay_for_velocity={self._decay_for_velocity}"
+
+    def updateHyperParam(
+        self, learning_rate: float, dimension: int, decay_for_velocity: float = 0.9
+    ):
+        if Momentum.isValidMomentumParam(decay_for_velocity):
+            super().updateHyperParam(learning_rate, dimension)
+            self._decay_for_velocity = decay_for_velocity
 
     def step(self, param: dict, gradients: dict):
         self.checkShape(param, gradients)

@@ -62,6 +62,7 @@ class LinearRegression:
         if self._isValidShape(features, expectedOutputs):
             self.features = np.array(features, dtype=float)
             self.expectedOutputs = np.array(expectedOutputs, dtype=float)
+            self._initializeParam(self.dimension)
             if self._optimizer:
                 self._optimizer._dimension = self.dimension
         else:
@@ -88,7 +89,6 @@ class LinearRegression:
             for epoch in range(epochs):
                 self._optimizer.step(self._param, self._gradients())
                 self.loss_history.append(self._loss())
-                print(f"Epoch {epoch + 1}/{epochs}, Loss: {self._loss():.4f}")
         else:
             raise ValueError("Optimizer doesn't exist, cannot fit")
 

@@ -8,36 +8,36 @@ classDiagram
         -_optimizer : Optimizer
         +dimension : int
         +loss_history : list
-        +__init__(features, expectedOutputs, optimizer)
+        +__init__(features: list[list], expectedOutputs: list, optimizer: Optimizer)
         -_increaseModelCount()$
-        -_initializeParam(dimension)
-        +updateOptimizer(optimizer)
+        -_initializeParam(dimension: int)
+        +updateOptimizer(optimizer: Optimizer)
         +removeOptimizer()
         +getOptimizer() Optimizer
         +getParam() dict
-        +setParam(param)
+        +setParam(param: dict)
         +getSamples() ndarray, ndarray
-        +setSamples(features, expectedOutputs) +getModelCount()$ int
+        +setSamples(features: list[list]), expectedOutputs: list) +getModelCount()$ int
         +standardTemplate()$ LinearRegression
         +fit(epochs: int)
-        +predict(features) ndarray
+        +predict(features: list[list]) ndarray
         -_loss() float
-        +mean_squared_error(expectedOutput, predictedOutput)$ float
+        +mean_squared_error(expectedOutput: list[list], predictedOutput: list)$ float
         -_gradients() dict
-        -_isValidShape(features, y) bool
+        -_isValidShape(features: list[list], y: list) bool
     }
 
     class LassoRegression {
         -_penalty_factor : float
         +__init__(features: list, expectedOutputs: list, optimizer: Optimizer, penalty_factor: float)
-        +isValidPenaltyFactor(penalty_factor)$ bool
+        +isValidPenaltyFactor(penalty_factor: float)$ bool
         -_gradients() dict
     }
 
     class RidgeRegression {
         -_penalty_factor : float
         +__init__(features: list, expectedOutputs: list, optimizer: Optimizer, penalty_factor: float)
-        +isValidPenaltyFactor(penalty_factor)$ bool
+        +isValidPenaltyFactor(penalty_factor: float)$ bool
         -_gradients() dict
     }
 
@@ -46,9 +46,11 @@ classDiagram
         -_step_count : int
         -_dimension : int
         +__init__(learning_rate: float, dimension: int)
-        +isValidHyperParam(learning_rate, dimension)$ bool
+        +__str__() str
+        +updateHyperParam(learning_rate: float, dimension: int)
+        +isValidHyperParam(learning_rate: float, dimension: int)$ bool
         +checkShape(param: dict, gradients: dict)
-        +step(param: dict, gradients: dict)
+        +step(param, gradients)
     }
 
     class Adam {
@@ -58,16 +60,20 @@ classDiagram
         -_weighted_average_squared_gradient: dict
         +padding: float
         +__init__(learning_rate: float, dimension: int, decay_for_weighted_moving_average_gradient: float, decay_for_weighted_moving_average_squared_gradient: float)
+        +__str__() str
+        +updateHyperParam(learning_rate, dimension, decay_for_weighted_moving_average_gradient, decay_for_weighted_moving_average_squared_gradient)
         +isValidAdamParam(decay_for_weighted_moving_average_gradient, decay_for_weighted_moving_average_squared_gradient)$ bool
-        +correction(x, decay, exponent)$
+        +correction(x, decay, exponent)$ T
         +step(param: dict, gradients: dict)
-        -_compute_update(param_name, gradients)
+        -_compute_update(param_name: str, gradients: dict) float
     }
 
     class Momentum {
         -_decay_for_velocity : float
         -_velocity : dict
         +__init__(learning_rate: float, dimension: int, decay_for_velocity: float)
+        +__str__() str
+        +updateHyperParam(learning_rate, dimension, decay_for_velocity)
         +isValidMomentumParam(decay_for_velocity)$ bool
         +step(param: dict, gradients: dict)
     }

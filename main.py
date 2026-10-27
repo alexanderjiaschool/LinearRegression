@@ -28,6 +28,14 @@ if __name__ == "__main__":
     plt.title("Training Loss")
     plt.show()
 
+    standard_model = LinearRegression.standardTemplate()
+    standard_model.fit(epochs=100)
+    standard_model.setSamples(features_train, outputs_train)
+    standard_model.fit(epochs=100)
+
+    standard_optimizer = standard_model.getOptimizer()
+    print(str(standard_optimizer))
+
     model.updateOptimizer(Adam(learning_rate=0.01, dimension=len(features_train[0])))
     model.fit(epochs=200)
 
